@@ -3,14 +3,11 @@ import { RouteDetailClient } from "./_client";
 
 export const metadata = { title: "Route Detail" };
 
-export default function RouteDetailPage({
-	params,
-}: {
-	params: { id: string };
-}) {
+export default async function RouteDetailPage({ params }: { params: Promise<{ id: string }> }) {
+	const { id } = await params;
 	return (
 		<DashboardLayout expectedRole={["manager", "admin"]}>
-			<RouteDetailClient routeId={params.id} />
+			<RouteDetailClient routeId={id} />
 		</DashboardLayout>
 	);
 }
