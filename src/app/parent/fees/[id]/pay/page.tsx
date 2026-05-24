@@ -3,7 +3,11 @@ import { PayFeeClient } from "./_client";
 
 export const metadata = { title: "Pay Fee" };
 
-export default async function PayFeePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PayFeePage({
+	params,
+}: {
+	params: Promise<{ id: string }>;
+}) {
 	const { id } = await params;
 	return (
 		<DashboardLayout expectedRole="parent">

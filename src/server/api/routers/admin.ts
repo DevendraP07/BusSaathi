@@ -1,10 +1,21 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { createTRPCRouter, adminProcedure, managerProcedure } from "@/server/api/trpc";
-import { user, systemLog, notification, route, bus, issue } from "@/server/db/schema";
 import { generateId } from "@/lib/id";
 import type { UserRole } from "@/lib/permissions";
+import {
+	adminProcedure,
+	createTRPCRouter,
+	managerProcedure,
+} from "@/server/api/trpc";
+import {
+	bus,
+	issue,
+	notification,
+	route,
+	systemLog,
+	user,
+} from "@/server/db/schema";
 
 export const adminRouter = createTRPCRouter({
 	// ── User Management ────────────────────────────
@@ -193,17 +204,19 @@ export const adminRouter = createTRPCRouter({
 	// ── Dashboard Stats ────────────────────────────
 
 	dashboardStats: adminProcedure.query(async ({ ctx }) => {
-		const [
-			totalUsers,
-			totalParents,
-			totalDrivers,
-			totalManagers,
-		] = await Promise.all([
-			ctx.db.query.user.findMany({ where: eq(user.isActive, true) }),
-			ctx.db.query.user.findMany({ where: and(eq(user.role, "parent"), eq(user.isActive, true)) }),
-			ctx.db.query.user.findMany({ where: and(eq(user.role, "driver"), eq(user.isActive, true)) }),
-			ctx.db.query.user.findMany({ where: and(eq(user.role, "manager"), eq(user.isActive, true)) }),
-		]);
+		const [totalUsers, totalParents, totalDrivers, totalManagers] =
+			await Promise.all([
+				ctx.db.query.user.findMany({ where: eq(user.isActive, true) }),
+				ctx.db.query.user.findMany({
+					where: and(eq(user.role, "parent"), eq(user.isActive, true)),
+				}),
+				ctx.db.query.user.findMany({
+					where: and(eq(user.role, "driver"), eq(user.isActive, true)),
+				}),
+				ctx.db.query.user.findMany({
+					where: and(eq(user.role, "manager"), eq(user.isActive, true)),
+				}),
+			]);
 
 		const routes = await ctx.db.query.route.findMany({
 			where: eq(route.status, "active"),

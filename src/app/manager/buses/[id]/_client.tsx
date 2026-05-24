@@ -1,25 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Bus, Calendar, Pencil, Route, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Bus, Pencil, Save, X, Route, Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "@/trpc/react";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
+import { api } from "@/trpc/react";
 
 export function BusDetailClient({ busId }: { busId: string }) {
 	const router = useRouter();
 	const [editing, setEditing] = useState(false);
-	const [status, setStatus] = useState<"active" | "inactive" | "maintenance">("active");
+	const [status, setStatus] = useState<"active" | "inactive" | "maintenance">(
+		"active",
+	);
 	const [model, setModel] = useState("");
 	const [capacity, setCapacity] = useState("");
 	const [gpsDeviceId, setGpsDeviceId] = useState("");
@@ -37,12 +45,12 @@ export function BusDetailClient({ busId }: { busId: string }) {
 			setGpsDeviceId(bus.gpsDeviceId ?? "");
 			setInsuranceExpiry(
 				bus.insuranceExpiry
-					? new Date(bus.insuranceExpiry).toISOString().split("T")[0] ?? ""
+					? (new Date(bus.insuranceExpiry).toISOString().split("T")[0] ?? "")
 					: "",
 			);
 			setFitnessCertExpiry(
 				bus.fitnessCertExpiry
-					? new Date(bus.fitnessCertExpiry).toISOString().split("T")[0] ?? ""
+					? (new Date(bus.fitnessCertExpiry).toISOString().split("T")[0] ?? "")
 					: "",
 			);
 		}
@@ -71,37 +79,49 @@ export function BusDetailClient({ busId }: { busId: string }) {
 	return (
 		<div className="max-w-2xl space-y-5">
 			<PageHeader
-				title={bus.registrationNumber}
-				description={bus.model ?? "Bus Details"}
-				icon={Bus}
 				actions={
 					<div className="flex gap-2">
 						{!editing ? (
 							<>
-								<Button size="sm" variant="outline" onClick={() => setEditing(true)} className="gap-1">
-									<Pencil className="h-4 w-4" />Edit
+								<Button
+									className="gap-1"
+									onClick={() => setEditing(true)}
+									size="sm"
+									variant="outline"
+								>
+									<Pencil className="h-4 w-4" />
+									Edit
 								</Button>
 								<ConfirmDialog
+									confirmLabel="Remove"
+									description={`Remove bus ${bus.registrationNumber}? This action cannot be undone.`}
+									onConfirm={() => remove.mutate({ busId })}
+									title="Remove Bus?"
 									trigger={
-										<Button size="sm" variant="outline" className="gap-1 border-destructive text-destructive hover:bg-destructive/10">
+										<Button
+											className="gap-1 border-destructive text-destructive hover:bg-destructive/10"
+											size="sm"
+											variant="outline"
+										>
 											Remove
 										</Button>
 									}
-									title="Remove Bus?"
-									description={`Remove bus ${bus.registrationNumber}? This action cannot be undone.`}
-									confirmLabel="Remove"
 									variant="destructive"
-									onConfirm={() => remove.mutate({ busId })}
 								/>
 							</>
 						) : (
 							<>
-								<Button size="sm" variant="outline" onClick={() => setEditing(false)} className="gap-1">
-									<X className="h-4 w-4" />Cancel
+								<Button
+									className="gap-1"
+									onClick={() => setEditing(false)}
+									size="sm"
+									variant="outline"
+								>
+									<X className="h-4 w-4" />
+									Cancel
 								</Button>
 								<Button
-									size="sm"
-									className="bg-[oklch(0.18_0.04_250)] text-white hover:bg-[oklch(0.22_0.04_250)] gap-1"
+									className="gap-1 bg-[oklch(0.18_0.04_250)] text-white hover:bg-[oklch(0.22_0.04_250)]"
 									disabled={update.isPending}
 									onClick={() =>
 										update.mutate({
@@ -114,6 +134,7 @@ export function BusDetailClient({ busId }: { busId: string }) {
 											fitnessCertExpiry: fitnessCertExpiry || undefined,
 										})
 									}
+									size="sm"
 								>
 									<Save className="h-4 w-4" />
 									{update.isPending ? "Saving..." : "Save"}
@@ -122,12 +143,15 @@ export function BusDetailClient({ busId }: { busId: string }) {
 						)}
 					</div>
 				}
+				description={bus.model ?? "Bus Details"}
+				icon={Bus}
+				title={bus.registrationNumber}
 			/>
 
 			{/* Bus Info */}
 			<Card>
 				<CardHeader className="pb-3">
-					<CardTitle className="text-sm flex items-center justify-between">
+					<CardTitle className="flex items-center justify-between text-sm">
 						Bus Information
 						<StatusBadge status={bus.status} />
 					</CardTitle>
@@ -137,7 +161,10 @@ export function BusDetailClient({ busId }: { busId: string }) {
 						<div className="grid grid-cols-2 gap-4">
 							<div className="space-y-1.5">
 								<Label className="text-xs">Status</Label>
-								<Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+								<Select
+									onValueChange={(v) => setStatus(v as typeof status)}
+									value={status}
+								>
 									<SelectTrigger className="h-8">
 										<SelectValue />
 									</SelectTrigger>
@@ -150,34 +177,87 @@ export function BusDetailClient({ busId }: { busId: string }) {
 							</div>
 							<div className="space-y-1.5">
 								<Label className="text-xs">Model / Make</Label>
-								<Input className="h-8" value={model} onChange={(e) => setModel(e.target.value)} />
+								<Input
+									className="h-8"
+									onChange={(e) => setModel(e.target.value)}
+									value={model}
+								/>
 							</div>
 							<div className="space-y-1.5">
 								<Label className="text-xs">Seating Capacity</Label>
-								<Input className="h-8" type="number" min="1" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+								<Input
+									className="h-8"
+									min="1"
+									onChange={(e) => setCapacity(e.target.value)}
+									type="number"
+									value={capacity}
+								/>
 							</div>
 							<div className="space-y-1.5">
 								<Label className="text-xs">GPS Device ID</Label>
-								<Input className="h-8" value={gpsDeviceId} onChange={(e) => setGpsDeviceId(e.target.value)} />
+								<Input
+									className="h-8"
+									onChange={(e) => setGpsDeviceId(e.target.value)}
+									value={gpsDeviceId}
+								/>
 							</div>
 							<div className="space-y-1.5">
 								<Label className="text-xs">Insurance Expiry</Label>
-								<Input className="h-8" type="date" value={insuranceExpiry} onChange={(e) => setInsuranceExpiry(e.target.value)} />
+								<Input
+									className="h-8"
+									onChange={(e) => setInsuranceExpiry(e.target.value)}
+									type="date"
+									value={insuranceExpiry}
+								/>
 							</div>
 							<div className="space-y-1.5">
 								<Label className="text-xs">Fitness Cert Expiry</Label>
-								<Input className="h-8" type="date" value={fitnessCertExpiry} onChange={(e) => setFitnessCertExpiry(e.target.value)} />
+								<Input
+									className="h-8"
+									onChange={(e) => setFitnessCertExpiry(e.target.value)}
+									type="date"
+									value={fitnessCertExpiry}
+								/>
 							</div>
 						</div>
 					) : (
 						<div className="grid grid-cols-2 gap-4 text-sm">
-							<div><p className="text-xs text-muted-foreground">Registration</p><p className="font-mono font-bold">{bus.registrationNumber}</p></div>
-							<div><p className="text-xs text-muted-foreground">Model</p><p className="font-semibold">{bus.model ?? "—"}</p></div>
-							<div><p className="text-xs text-muted-foreground">Capacity</p><p className="font-semibold">{bus.capacity} seats</p></div>
-							<div><p className="text-xs text-muted-foreground">GPS Device</p><p className="font-semibold">{bus.gpsDeviceId ?? "—"}</p></div>
-							<div><p className="text-xs text-muted-foreground">Insurance Expiry</p><p className="font-semibold">{formatDate(bus.insuranceExpiry)}</p></div>
-							<div><p className="text-xs text-muted-foreground">Fitness Cert Expiry</p><p className="font-semibold">{formatDate(bus.fitnessCertExpiry)}</p></div>
-							<div><p className="text-xs text-muted-foreground">Added On</p><p className="font-semibold">{formatDate(bus.createdAt)}</p></div>
+							<div>
+								<p className="text-muted-foreground text-xs">Registration</p>
+								<p className="font-bold font-mono">{bus.registrationNumber}</p>
+							</div>
+							<div>
+								<p className="text-muted-foreground text-xs">Model</p>
+								<p className="font-semibold">{bus.model ?? "—"}</p>
+							</div>
+							<div>
+								<p className="text-muted-foreground text-xs">Capacity</p>
+								<p className="font-semibold">{bus.capacity} seats</p>
+							</div>
+							<div>
+								<p className="text-muted-foreground text-xs">GPS Device</p>
+								<p className="font-semibold">{bus.gpsDeviceId ?? "—"}</p>
+							</div>
+							<div>
+								<p className="text-muted-foreground text-xs">
+									Insurance Expiry
+								</p>
+								<p className="font-semibold">
+									{formatDate(bus.insuranceExpiry)}
+								</p>
+							</div>
+							<div>
+								<p className="text-muted-foreground text-xs">
+									Fitness Cert Expiry
+								</p>
+								<p className="font-semibold">
+									{formatDate(bus.fitnessCertExpiry)}
+								</p>
+							</div>
+							<div>
+								<p className="text-muted-foreground text-xs">Added On</p>
+								<p className="font-semibold">{formatDate(bus.createdAt)}</p>
+							</div>
 						</div>
 					)}
 				</CardContent>
@@ -186,20 +266,27 @@ export function BusDetailClient({ busId }: { busId: string }) {
 			{/* Assigned Routes */}
 			<Card>
 				<CardHeader className="pb-3">
-					<CardTitle className="text-sm flex items-center gap-2">
+					<CardTitle className="flex items-center gap-2 text-sm">
 						<Route className="h-4 w-4" />
 						Assigned Routes ({bus.routes.length})
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-2">
 					{bus.routes.length === 0 ? (
-						<p className="text-sm text-muted-foreground text-center py-4">Not assigned to any route</p>
+						<p className="py-4 text-center text-muted-foreground text-sm">
+							Not assigned to any route
+						</p>
 					) : (
 						bus.routes.map((r) => (
-							<div key={r.id} className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2.5">
+							<div
+								className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2.5"
+								key={r.id}
+							>
 								<div>
 									<p className="font-medium text-sm">{r.name}</p>
-									<p className="text-xs text-muted-foreground">{r.routeCode} · {r.departureTime}</p>
+									<p className="text-muted-foreground text-xs">
+										{r.routeCode} · {r.departureTime}
+									</p>
 								</div>
 								<StatusBadge status={r.status} />
 							</div>
@@ -211,20 +298,27 @@ export function BusDetailClient({ busId }: { busId: string }) {
 			{/* Trip History */}
 			<Card>
 				<CardHeader className="pb-3">
-					<CardTitle className="text-sm flex items-center gap-2">
+					<CardTitle className="flex items-center gap-2 text-sm">
 						<Calendar className="h-4 w-4" />
 						Recent Trips ({bus.trips.length})
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-2">
 					{bus.trips.length === 0 ? (
-						<p className="text-sm text-muted-foreground text-center py-4">No trips recorded yet</p>
+						<p className="py-4 text-center text-muted-foreground text-sm">
+							No trips recorded yet
+						</p>
 					) : (
 						bus.trips.slice(0, 5).map((t) => (
-							<div key={t.id} className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2.5">
+							<div
+								className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2.5"
+								key={t.id}
+							>
 								<div>
-									<p className="font-mono text-xs font-medium">{t.tripRef}</p>
-									<p className="text-xs text-muted-foreground">{formatDate(t.scheduledDate)}</p>
+									<p className="font-medium font-mono text-xs">{t.tripRef}</p>
+									<p className="text-muted-foreground text-xs">
+										{formatDate(t.scheduledDate)}
+									</p>
 								</div>
 								<StatusBadge status={t.status} />
 							</div>
